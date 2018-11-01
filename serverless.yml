@@ -1,0 +1,102 @@
+service: tenants
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  memorySize: 128
+  stage: dev
+  region: us-east-2
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+    SERVICE_NAME: ${self:service}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+
+functions:
+  create:
+    handler: handler.create
+    events:
+      - http:
+          path: /
+          method: post
+          cors: true
+  delete:
+    handler: handler.delete
+    events:
+      - http:
+          path: /{id}
+          method: delete
+          cors: true
+  list:
+    handler: handler.list
+    events:
+      - http:
+          path: /
+          method: get
+          cors: true
+  single:
+    handler: handler.single
+    events:
+      - http:
+          path: /{id}
+          method: get
+          cors: true
+  replace:
+    handler: handler.replace
+    events:
+      - http:
+          path: /{id}
+          method: put
+          cors: true
+  update:
+    handler: handler.update
+    events:
+      - http:
+          path: /{id}
+          method: patch
+          cors: true
+        
+resources:
+  Resources:
+    ProductsDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+
+plugins:
+  - serverless-domain-manager
+  - serverless-offline
+  
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  domains:
+    prod: api.madelabs.io
+    staging: staging-api.madelabs.io
+    dev: dev-api.madelabs.io
+
+  customDomain:
+    domainName: ${self:custom.domains.${self:custom.stage}}
+    stage: ${self:custom.stage}
+    basePath: 'tenants'
+    endpointType: 'regional'
+    certificateName: '*.madelabs.io'
