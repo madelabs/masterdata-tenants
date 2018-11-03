@@ -28,41 +28,31 @@ functions:
           path: /
           method: post
           cors: true
+          authorizer: ${self:custom.authorizer}
   delete:
     handler: handler.delete
     events:
       - http:
-          path: /{id}
+          path: /
           method: delete
           cors: true
-  list:
-    handler: handler.list
+          authorizer: ${self:custom.authorizer}
+  single:
+    handler: handler.single
     events:
       - http:
           path: /
           method: get
           cors: true
-  single:
-    handler: handler.single
-    events:
-      - http:
-          path: /{id}
-          method: get
-          cors: true
-  replace:
-    handler: handler.replace
-    events:
-      - http:
-          path: /{id}
-          method: put
-          cors: true
+          authorizer: ${self:custom.authorizer}
   update:
     handler: handler.update
     events:
       - http:
-          path: /{id}
+          path: /
           method: patch
           cors: true
+          authorizer: ${self:custom.authorizer}
         
 resources:
   Resources:
@@ -93,6 +83,9 @@ custom:
     prod: api.madelabs.io
     staging: staging-api.madelabs.io
     dev: dev-api.madelabs.io
+  authorizer: 
+    name: authorizer
+    arn: arn:aws:cognito-idp:us-east-2:054771062887:userpool/us-east-2_RRYO7mexD
 
   customDomain:
     domainName: ${self:custom.domains.${self:custom.stage}}

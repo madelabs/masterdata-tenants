@@ -45,7 +45,7 @@ module.exports.delete = async (event, context) => {
   const params = {
     TableName: process.env.DYNAMODB_TABLE,
     Key: {
-      id: event.pathParameters.id
+      id: event.requestContext.authorizer.claims["custom:tenant_id"]
     }
   };
   
@@ -67,38 +67,11 @@ module.exports.delete = async (event, context) => {
   }
 };
 
-module.exports.list = async (event, context) => {
-  const params = {
-    TableName: process.env.DYNAMODB_TABLE
-  };
-  
-  try {
-    const result = await dynamodb.scan(params).promise();
-    return {
-      statusCode: 200,
-      headers: headers,
-      body: JSON.stringify(result.Items)
-    };
-  }
-  catch (error) {
-    console.error('error', error);
-    return {
-      statusCode: error.statusCode || 501,
-      headers: headers,
-      error: `Could not get ${name} list`
-    };
-  }
-};
-
-module.exports.replace = async (event, context) => {
-  // todo
-};
-
 module.exports.single = async (event, context) => {
   const params = {
     TableName: process.env.DYNAMODB_TABLE,
     Key: {
-      id: event.pathParameters.id
+      id: event.requestContext.authorizer.claims["custom:tenant_id"]
     }
   };
   
@@ -125,7 +98,7 @@ module.exports.single = async (event, context) => {
     return {
       statusCode: error.statusCode || 501,
       headers: headers,
-      error: `Could not delete ${name}`
+      error: `Could not get ${name}`
     };
   }
 };
@@ -133,7 +106,11 @@ module.exports.single = async (event, context) => {
 module.exports.update = async (event, context) => {
   return {
     statusCode: 404,
-      headers: headers,
+    headers: headers,
     error: 'Not implemented'
   };
 };
+
+async function single(id) {
+  
+}
