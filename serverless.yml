@@ -50,7 +50,7 @@ functions:
     events:
       - http:
           path: /
-          method: patch
+          method: put
           cors: true
           authorizer: ${self:custom.authorizer}
         

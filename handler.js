@@ -28,7 +28,7 @@ module.exports.create = async (event, context) => {
     return {
       statusCode: 200,
       headers: headers,
-      body: JSON.stringify(params.Item)
+      body: JSON.stringify(result.Item)
     };
   }
   catch (error) {
@@ -78,19 +78,20 @@ module.exports.single = async (event, context) => {
   try {
     const result = await dynamodb.get(params).promise();
     
-    // if no items were found
-    if (!result || typeof result === 'undefined' || !result.Item) {
-      return {
-        statusCode: 404,
-        headers: headers,
-        body: { message: `Couldn\'t find ${name}` }
-      };
-    }
+    // // if no items were found
+    // if (!result || typeof result === 'undefined' || !result.Item) {
+    //   console.log('not found');
+    //   return {
+    //     statusCode: 404,
+    //     headers: headers,
+    //     body: { message: `Couldn\'t find ${name}` }
+    //   };
+    // }
     
     return {
-      statusCode: 200,
+      statusCode: 200,  
       headers: headers,
-      body: JSON.stringify(result.Item),
+      body: JSON.stringify(result.Item)
     };
   }
   catch (error) {
@@ -104,13 +105,46 @@ module.exports.single = async (event, context) => {
 };
 
 module.exports.update = async (event, context) => {
-  return {
-    statusCode: 404,
-    headers: headers,
-    error: 'Not implemented'
-  };
-};
+  const data = JSON.parse(event.body);
 
-async function single(id) {
+  var expression = `SET #name = :name, address = :address, phone = :phone, 
+    lastUpdated = :lastUpdated`;
+
+  var expressionValues = {
+    ':name': data.name,
+    ':address': data.address,
+    ':phone': data.phone,
+    ':lastUpdated': new Date()
+  };
+
+  const params = {
+    TableName: process.env.DYNAMODB_TABLE,
+    Key: {
+      id: event.requestContext.authorizer.claims["custom:tenant_id"]
+    },
+    ExpressionAttributeNames: {
+      '#name': 'name',
+    },
+    UpdateExpression: expression,
+    ExpressionAttributeValues: expressionValues,
+    ReturnValues: 'ALL_NEW'
+  };
   
-}
+  try {
+    const result = await dynamodb.update(params).promise();
+    
+    return {
+      statusCode: 200,
+      headers: headers,
+      body: JSON.stringify(result.Item)
+    };
+  }
+  catch (error) {
+    console.error('error', error);
+    return {
+      statusCode: error.statusCode || 501,
+      headers: headers,
+      error: 'Could not update tenant'
+    };
+  }
+};
