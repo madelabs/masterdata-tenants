@@ -1,2 +1,4 @@
-.serverless
+.dynamodb
+.serverless 
 node_modules
+dist
